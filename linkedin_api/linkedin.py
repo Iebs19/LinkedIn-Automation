@@ -311,7 +311,7 @@ class Linkedin(object):
 
             self.logger.debug(f"results grew to {len(results)}")
             
-        print(results)
+        # print(results)
         return results
 
     def search_people(
@@ -505,7 +505,47 @@ class Linkedin(object):
             )
 
         return results
+    
+    def search_groups(self, keywords=None, **kwargs):
+        """Perform a LinkedIn search for groups.
 
+        :param keywords: A list of search keywords (str)
+        :type keywords: list, optional
+
+        :return: List of groups
+        :rtype: list
+        """
+        filters = ["(key:resultType,value:List(GROUPS))"]
+
+        params = {
+            "filters": "List({})".format(",".join(filters)),
+            "queryContext": "List(spellCorrectionEnabled->true)",
+        }
+
+        if keywords:
+            params["keywords"] = keywords
+
+        data = self.search(params, **kwargs)
+
+        results = []
+        for item in data:
+            group_details = item.get("trackingUrn")
+            if "group" not in group_details:
+                continue
+            results.append(
+                {
+                    "urn_id": get_id_from_urn(group_details),
+                    "name": (item.get("title") or {}).get("text", None),
+                    "description": (item.get("summary") or {}).get("text", None),
+                    "member_count": (item.get("primarySubtitle") or {}).get("text", None),
+                    "url": item.get("navigationUrl", None),
+                    "image_url": ((item.get("image") or {}).get("attributes", [])[0].get("detailData", {}).get("nonEntityGroupLogo", {}).get("vectorImage", {}).get("artifacts", [])[0].get("fileIdentifyingUrlPathSegment", None))
+                }
+            )
+
+        return results
+
+    
     def search_jobs(
         self,
         keywords=None,

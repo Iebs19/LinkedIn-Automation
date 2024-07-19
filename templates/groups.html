@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Groups</title>
+</head>
+<body>
+    <form id="searchForm">
+        <input type="text" name="business_idea" placeholder="Enter business idea">
+        <button type="submit">Search</button>
+    </form>
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const businessIdea = event.target.business_idea.value;
+
+            fetch('/groups', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ business_idea: businessIdea }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    sessionStorage.setItem('users', JSON.stringify(data.users));
+                    window.location.href = '/group-results';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -19,6 +19,9 @@ def index():
 @app.route('/index')
 def index1():
     return render_template('index.html')
+@app.route('/group')
+def group_base():
+    return render_template('groups.html')
 
 @app.route('/search', methods=['POST'])
 def search():
@@ -26,10 +29,12 @@ def search():
     business_idea = data.get('business_idea')
     countries = data.get('country')
     industry = data.get('industry')
+    connection = data.get('connection')
+    print(connection)
 
     api = Linkedin(LINKEDIN_USERNAME, LINKEDIN_PASSWORD)
     
-    users = api.search_people(business_idea, limit=1, industries=industry, regions=countries, network_depths=['F', 'O'], include_private_profiles=True)
+    users = api.search_people(business_idea, limit=1, industries=industry, regions=countries, network_depths=connection, include_private_profiles=True)
 
     client = OpenAI()
     user_message_pairs = []
@@ -61,7 +66,21 @@ def results():
         return redirect(url_for('index'))
 
     return render_template('results.html', business_idea=business_idea, users=users, user_message_pairs=user_message_pairs)
+@app.route('/groups', methods=['POST'])
+def group():
+    data = request.get_json()
+    business_idea = data.get('business_idea')
+    print(business_idea)
 
+    api = Linkedin(LINKEDIN_USERNAME, LINKEDIN_PASSWORD)
+    users = api.search_groups(business_idea, limit=1)
+    print(users)
+
+    return jsonify(status="success", users=users)
+
+@app.route('/group-results')
+def group_results():
+    return render_template('groupresults.html')
 @app.route('/send_messages', methods=['POST'])
 def send_messages():
     try:

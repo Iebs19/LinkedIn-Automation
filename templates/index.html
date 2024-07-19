@@ -54,11 +54,13 @@
             const businessIdea = document.getElementById('business_idea').value;
             const industry = Array.from(document.querySelectorAll('input[name="industry"]:checked')).map(cb => cb.value);
             const countries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(cb => cb.value);
+            const connections = Array.from(document.querySelectorAll('input[name="connection"]:checked')).map(cb => cb.value);
             
             const data = {
                 business_idea: businessIdea,
                 industry: industry,
-                country: countries
+                country: countries,
+                connection: connections
             };
 
             try {
@@ -158,6 +160,15 @@
                     <label><input type="checkbox" name="industry" value="69">Education Management</label><br>
                     <label><input type="checkbox" name="industry" value="132">E-Learning</label><br>
                     <label><input type="checkbox" name="industry" value="112">Electrical/Electronic Manufacturing</label>
+                </div>
+            </div>
+            <div class="dropdown" id="connectionDropdown">
+                <label for="connection" class="dropbtn" onclick="toggleDropdown()">Type of Connection:</label>
+                <div class="dropdown-content" id="connection">
+                    <label><input type="checkbox" name="connection" value="F">1st</label><br>
+                    <label><input type="checkbox" name="connection" value="S">2nd</label><br>
+                    <label><input type="checkbox" name="connection" value="O">3rd</label>
+
                 </div>
             </div>
         </div>
