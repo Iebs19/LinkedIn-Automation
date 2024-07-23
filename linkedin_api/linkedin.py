@@ -11,6 +11,8 @@ from operator import itemgetter
 from time import sleep, time
 from urllib.parse import quote, urlencode
 
+import urllib3
+
 from linkedin_api.client import Client
 from linkedin_api.utils.helpers import (
     append_update_post_field_to_posts_list,
@@ -91,6 +93,8 @@ class Linkedin(object):
         evade()
 
         url = f"{self.client.API_BASE_URL if not base_request else self.client.LINKEDIN_BASE_URL}{uri}"
+        print(url)
+        print(self.client.session.get(url, **kwargs))
         return self.client.session.get(url, **kwargs)
 
     def _cookies(self):
@@ -314,6 +318,91 @@ class Linkedin(object):
         # print(results)
         return results
 
+    def fetch_group_members(self, urn_id, start=0, count=10):
+            """
+            Fetch group membership details based on the provided URN ID.
+
+            :param urn_id: The URN ID of the group
+            :type urn_id: str
+            :param start: The starting index for the results (pagination)
+            :type start: int, optional
+            :param count: The number of results to return
+            :type count: int, optional
+
+            :return: List of group members
+            :rtype: list
+            """
+            # Construct the query parameters
+            # params = {
+            #     "groupUrn": f"urn:li:fsd_group:{urn_id}",
+            #     "filters": "List()",
+            #     "typeaheadQuery": "''",
+            #     "start": start,
+            #     "count": count,
+            #     "membershipStatuses": "List(OWNER,MANAGER,MEMBER)"
+            # }
+            
+            # url = urlencode(
+            #     f"/graphql?includeWebMetadata=true&variables=(groupUrn:urn:li:fsd_group:{urn_id},filters:List(),"
+            #     f"typeheadQuery:'',start:{start},count:{count},membershipStatuses:List(OWNER,MANAGER,MEMBER))"
+            #     f"&queryId=voyagerGroupsDashGroupMemberships.6b4c85a818d5b0f1ad9c8e997bd0ca2a")
+            
+            # print(url)
+            query_id = "voyagerGroupsDashGroupMemberships.6b4c85a818d5b0f1ad9c8e997bd0ca2a"
+            variables = {
+                "groupUrn": f"urn:li:fsd_group:{urn_id}",
+                "filters": "List()",
+                "typeaheadQuery": "''",
+                "start": start,
+                "count": count,
+                "membershipStatuses": "List(OWNER,MANAGER,MEMBER)"
+            }
+
+            params = {
+                "includeWebMetadata": "true",
+                "variables": json.dumps(variables).replace(" ", ""),
+                "queryId": query_id
+            }
+
+            encoded_params = urlencode(params)
+            url = f"/graphql?{encoded_params}"
+            
+            res = self._fetch(url)
+            
+            
+            print(url)
+            
+            data = res.json()
+            
+            print(data)
+            
+            
+            return data
+            
+            # Construct the URL
+            # encoded_params = urllib.parse.urlencode(params, doseq=True)
+            # graphql_url = (
+            #     f"https://www.linkedin.com/voyager/api/graphql?"
+            #     f"variables=({encoded_params})"
+            #     f"&queryId=voyagerGroupsDashGroupMemberships.6b4c85a818d5b0f1ad9c8e997bd0ca2a"
+            # )
+
+            # # Print the URL to verify its correctness
+            # print(graphql_url)
+
+            # # Fetch data from the LinkedIn API
+            # headers = {
+            #     'Authorization': f'Bearer {self.api_key}',
+            #     'Content-Type': 'application/json'
+            # }
+            # response = requests.get(graphql_url, headers=headers)
+            
+            # if response.status_code == 200:
+            #     return response.json()
+            # else:
+            #     return {"error": f"Request failed with status code {response.status_code}"}
+    
+    
     def search_people(
         self,
         keywords=None,
@@ -545,6 +634,58 @@ class Linkedin(object):
 
         return results
 
+    def group_members(self, urn_id, start=0, count=10):
+        """
+        Retrieve group membership details based on the provided urn ID.
+
+        :param urn_id: The URN ID of the group
+        :type urn_id: str
+        :param start: The starting index for the results (pagination)
+        :type start: int, optional
+        :param count: The number of results to return
+        :type count: int, optional
+
+        :return: List of group members
+        :rtype: list
+        """
+        # Construct the query parameters
+        params = {
+                "groupUrn": f"urn:li:fsd_group:{urn_id}",
+                "typeaheadQuery": "",
+                "start": start,
+                "count": count,
+                "membershipStatuses": ["OWNER", "MANAGER", "MEMBER"],
+        }
+        
+        print(params)
+        # encoded_params = urllib3.parse.urlencode(params, doseq=True)
+        # graphql_url = f"/graphql?{encoded_params}"
+
+        # Print the URL to verify its correctness
+        # print(graphql_url)
+
+        # Call the search function with these parameters
+        data = self.search(params)
+
+        # # Parse the results
+        # results = []
+        # for item in data:
+        #     member_details = item.get("entityUrn")
+        #     if not member_details:
+        #         continue
+        #     results.append(
+        #         {
+        #             "urn_id": member_details,
+        #             "name": item.get("name", None),
+        #             "title": item.get("headline", None),
+        #             "profile_url": item.get("publicProfileUrl", None),
+        #             "image_url": ((item.get("image") or {}).get("attributes", [])[0].get("detailData", {}).get("profilePicture", {}).get("vectorImage", {}).get("artifacts", [])[0].get("fileIdentifyingUrlPathSegment", None))
+        #         }
+        #     )
+
+        return data
+
+    
     
     def search_jobs(
         self,
