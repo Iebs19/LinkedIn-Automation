@@ -1,1 +1,6 @@
 # LinkedIn-Automation
+This website lets you search more than 3 people at a time without even having linkedin premium account. It uses basic html, js for frontend and python based flask framework for backend. The API used for fetching linkedin accounts is nothing but the one which is being used by linkedin itself i.e., https://www.linkedin.com/voyager/api . 
+
+### How to run this application
+First of all open your ide i.e, VS Code and open a new terminal and git clone the repository and then make sure you're in root folder now create a '.env' file in root and then create variables like as follows:
+, and run the to create a virtual environment by running the command 'virtualenv -p python3.9 venv', now run the virtual env by running the command 'venv\scripts\activate' and once the virtual environment is activated run 'python app.py'. You will see that the development server is running on localhost 5000 port, open that in browser, click on people to search people, enter your business idea, slect the filters and click on search, then wait for the backend to response and then click on the checkboxes and select the messages you want to send, and then click on checkboxes and send connection requests.

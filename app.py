@@ -122,6 +122,7 @@ def send_messages():
 def send_connection_requests():
     try:
         user_ids = request.form.getlist('user_ids')
+        print(user_ids)
         api = Linkedin(LINKEDIN_USERNAME, LINKEDIN_PASSWORD)
 
         for user_id in user_ids:

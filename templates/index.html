@@ -73,126 +73,112 @@
             margin-top: 20px;
         }
     </style>
-   <script>
-    function toggleDropdown(id) {
-        document.getElementById(id).classList.toggle("show");
-    }
+    <script>
+        function toggleDropdown(id) {
+            document.getElementById(id).classList.toggle("show");
+        }
 
-    window.onclick = function (event) {
-        if (!event.target.matches('.dropbtn')) {
-            var dropdowns = document.getElementsByClassName("dropdown-content");
-            for (var i = 0; i < dropdowns.length; i++) {
-                var openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
+        window.onclick = function (event) {
+            if (!event.target.matches('.dropbtn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
                 }
             }
         }
-    }
 
-    async function handleSubmit(event) {
-        event.preventDefault();
+        async function handleSubmit(event) {
+            event.preventDefault();
 
-        const businessIdea = document.getElementById('business_idea').value;
-        const industry = Array.from(document.querySelectorAll('input[name="industry"]:checked')).map(cb => cb.value);
-        const countries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(cb => cb.value);
-        const connections = Array.from(document.querySelectorAll('input[name="connection"]:checked')).map(cb => cb.value);
+            const businessIdea = document.getElementById('business_idea').value;
+            const industry = Array.from(document.querySelectorAll('input[name="industry"]:checked')).map(cb => cb.value);
+            const countries = Array.from(document.querySelectorAll('input[name="country"]:checked')).map(cb => cb.value);
+            const connections = Array.from(document.querySelectorAll('input[name="connection"]:checked')).map(cb => cb.value);
 
-        const data = {
-            business_idea: businessIdea,
-            industry: industry,
-            country: countries,
-            connection: connections
-        };
+            const data = {
+                business_idea: businessIdea,
+                industry: industry,
+                country: countries,
+                connection: connections
+            };
 
-        try {
-            const response = await fetch('/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        console.log(result);
+                        console.log(results.user_message_pairs);
+                        // Update results section with new data
+                        displayResults(result.user_message_pairs);
+                    } else {
+                        alert('Error occurred: ' + result.message);
+                    }
+                } else {
+                    alert('Error occurred: ' + response.statusText);
+                }
+            } catch (error) {
+                console.error('Error in POST request:', error);
+                alert('An error occurred while processing your request.');
+            }
+        }
+
+        function displayResults(userMessagePairs) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>Potential Buyers:</h2>';
+            const formMessages = document.createElement('form');
+            formMessages.action = "{{ url_for('send_messages') }}";
+            formMessages.method = "POST";
+
+            const formConnections = document.createElement('form');
+            formConnections.action = "{{ url_for('send_connection_requests') }}";
+            formConnections.method = "POST";
+
+            const ul = document.createElement('ul');
+            userMessagePairs.forEach(({ user, id, name, jobtitle, navigationUrl, message }) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <input type="checkbox" id="user_${id}" name="user_ids" value="${id}">
+                    <label for="user_${id}">${name} - ${jobtitle} - ${message}</label>
+                    <input type="text" name="messages" value="${message}">
+                    <a href="${navigationUrl}" target="_blank">
+                        <button type="button">View Profile on LinkedIn</button>
+                    </a>
+                `;
+                ul.appendChild(li);
             });
 
-            if (response.ok) {
-                const result = await response.json();
-                if (result.status === 'success') {
-                    console.log(result);
-                    console.log(result.user_message_pairs);
-                    // Update results section with new data
-                    displayResults(result.user_message_pairs);
-                } else {
-                    alert('Error occurred: ' + result.message);
-                }
-            } else {
-                alert('Error occurred: ' + response.statusText);
-            }
-        } catch (error) {
-            console.error('Error in POST request:', error);
-            alert('An error occurred while processing your request.');
+            formMessages.appendChild(ul.cloneNode(true));
+            formConnections.appendChild(ul.cloneNode(true));
+
+            const submitButtonMessages = document.createElement('button');
+            submitButtonMessages.type = 'submit';
+            submitButtonMessages.textContent = 'Send Messages';
+            formMessages.appendChild(submitButtonMessages);
+
+            const submitButtonConnections = document.createElement('button');
+            submitButtonConnections.type = 'submit';
+            submitButtonConnections.textContent = 'Send Connection Requests';
+            formConnections.appendChild(submitButtonConnections);
+
+            resultsDiv.appendChild(formMessages);
+            resultsDiv.appendChild(formConnections);
         }
-    }
 
-    function displayResults(userMessagePairs) {
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = '<h2>Potential Buyers:</h2>';
-
-        const formMessages = document.createElement('form');
-        formMessages.action = "{{ url_for('send_messages') }}";
-        formMessages.method = "POST";
-
-        const formConnections = document.createElement('form');
-        formConnections.action = "{{ url_for('send_connection_requests') }}";
-        formConnections.method = "POST";
-
-        const ulMessages = document.createElement('ul');
-        const ulConnections = document.createElement('ul');
-
-        userMessagePairs.forEach(({ user, id, name, jobtitle, navigationUrl, message }) => {
-            const liMessages = document.createElement('li');
-            liMessages.innerHTML = `
-                <input type="checkbox" id="user_${id}" name="user_ids" value="${id}">
-                <label for="user_${id}">${name} - ${jobtitle} - ${message}</label>
-                <input type="text" name="messages" value="${message}">
-                <a href="${navigationUrl}" target="_blank">
-                    <button type="button">View Profile on LinkedIn</button>
-                </a>
-            `;
-            ulMessages.appendChild(liMessages);
-
-            const liConnections = document.createElement('li');
-            liConnections.innerHTML = `
-                <input type="checkbox" id="connection_${id}" name="connection_ids" value="${id}">
-                <label for="connection_${id}">${name} - ${jobtitle}</label>
-                <a href="${navigationUrl}" target="_blank">
-                    <button type="button">View Profile on LinkedIn</button>
-                </a>
-            `;
-            ulConnections.appendChild(liConnections);
+        window.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('searchForm').addEventListener('submit', handleSubmit);
         });
-
-        formMessages.appendChild(ulMessages);
-        formConnections.appendChild(ulConnections);
-
-        const submitButtonMessages = document.createElement('button');
-        submitButtonMessages.type = 'submit';
-        submitButtonMessages.textContent = 'Send Messages';
-        formMessages.appendChild(submitButtonMessages);
-
-        const submitButtonConnections = document.createElement('button');
-        submitButtonConnections.type = 'submit';
-        submitButtonConnections.textContent = 'Send Connection Requests';
-        formConnections.appendChild(submitButtonConnections);
-
-        resultsDiv.appendChild(formMessages);
-        resultsDiv.appendChild(formConnections);
-    }
-
-    window.addEventListener('DOMContentLoaded', (event) => {
-        document.getElementById('searchForm').addEventListener('submit', handleSubmit);
-    });
-</script>
-
+    </script>
 </head>
 
 <body>
