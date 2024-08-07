@@ -527,6 +527,8 @@ class Linkedin(object):
 
         results = []
         for item in data:
+            
+            print(item)
             if (
                 not include_private_profiles
                 and (item.get("entityCustomTrackingInfo") or {}).get(
@@ -546,7 +548,7 @@ class Linkedin(object):
                     "jobtitle": (item.get("primarySubtitle") or {}).get("text", None),
                     "location": (item.get("secondarySubtitle") or {}).get("text", None),
                     "name": (item.get("title") or {}).get("text", None),
-                    "navigationUrl": item.get("navigationUrl", None),
+                    "navigationUrl": (item.get("navigationUrl"),None),
                     # "fileIdentifyingUrlPathSegment":item.get("image", {})
                     #                                     .get("attributes", [{}])[0]
                     #                                     .get("detailData", {})
@@ -556,6 +558,8 @@ class Linkedin(object):
                     #                                     .get("fileIdentifyingUrlPathSegment", None)
                 }
             )
+            
+        print(results)
 
         return results
 
